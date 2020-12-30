@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" style="display: none" id="file">
+    <div>
+        <button id="addBtn">新增</button>
+        <button id="removeBtn">删除</button>
+    </div>
+    <div id="list">
+
+    </div>
+    <div>
+        <input type="text" id="serviceName">
+        <br>
+        <button id="startService">启动</button>
+        <button id="stopService">停止</button>
+        <button id="restartService">重启</button>
+    </div>
+    <script>
+        const serviceNameEle = document.querySelector('#serviceName');
+        const startServiceEle = document.querySelector('#startService');
+        const stopServiceEle = document.querySelector('#stopService');
+        const restartServiceEle = document.querySelector('#restartService');
+
+        const addBtnEle = document.querySelector('#addBtn');
+        const removeBtnEle = document.querySelector('#removeBtn');
+
+        const listEle = document.querySelector('#list');
+        const fileEle = document.querySelector('#file');
+
+        // 初始化的时候获取扩展的列表
+        const options = {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        };
+        fetch('/get_extensions_list', options)
+          .then(res => res.json())
+          .then((data) => {
+            if (data.code === '0') {
+                const { extensionsList } = data.info;
+                let result = '';
+                for (let i = 0; i < extensionsList.length; i++) {
+                    const v = extensionsList[i];
+                    const div = document.createElement('div');
+                    div.innerHTML = v.name;
+                  result += div.outerHTML;
+                }
+                listEle.innerHTML = result;
+            }
+          });
+
+        startServiceEle.addEventListener('click', function () {
+            const serviceName = serviceNameEle.value;
+            const options = {
+                method: 'POST',
+                body: JSON.stringify({
+                  serviceName,
+                }),
+                headers: {
+                  'Content-Type': 'application/json'
+                }
+            };
+            fetch('/start', options).then(res => res.json()).then(data => console.log(data));
+        });
+
+        stopServiceEle.addEventListener('click', function () {
+          const serviceName = serviceNameEle.value;
+          const options = {
+              method: 'POST',
+              body: JSON.stringify({
+                serviceName,
+              }),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            };
+            fetch('/stop', options).then(res => res.json()).then(data => console.log(data));
+        });
+
+        restartServiceEle.addEventListener('click', function () {
+          const serviceName = serviceNameEle.value;
+          const options = {
+            method: 'POST',
+            body: JSON.stringify({
+              serviceName,
+            }),
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          };
+          fetch('/restart', options).then(res => res.json()).then(data => console.log(data));
+        });
+
+        addBtnEle.addEventListener('click', function () {
+          fileEle.click();
+        });
+
+        function clearCache() {
+          fileEle.value = null;
+        }
+
+        fileEle.addEventListener('change', function (e) {
+            const f = e.target.files[0];
+            if (f.type !== 'text/javascript') {
+              window.alert('仅支持上次js文件哦！');
+              clearCache();
+              return;
+            }
+            const fd = new FormData();
+            fd.append('file', f);
+            fd.append('name', f.name.split('.')[0]);
+            const options = {
+              method: 'POST',
+              body: fd,
+            };
+            fetch('/add_extensions', options);
+            console.log(f)
+        });
+
+
+        removeBtnEle.addEventListener('click', function (e) {
+            const name = serviceNameEle.value;
+            const options = {
+              method: 'POST',
+              body: JSON.stringify({
+                name,
+              }),
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            };
+            fetch('/remove_extensions', options)
+              .then((res) => {
+                if (res.code === '0') {
+                  console.log('删除成功')
+                }
+              })
+        })
+    </script>
+</body>
+</html>

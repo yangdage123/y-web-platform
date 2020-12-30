@@ -1,0 +1,7 @@
+version: '0.1'
+services:
+  y-web-platform:
+    build:
+      context: ./
+    ports:
+    - 3000:3000
